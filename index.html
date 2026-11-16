@@ -18,7 +18,7 @@
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-indigo-600">🚀 আমার শপ</h1>
             <div class="text-sm bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full font-medium">
-                কার্ট: <span id="cart-count">০</span> টি প্রোডাক্ট
+                মোট প্রোডাক্ট: <span id="cart-count">০</span> টি
             </div>
         </div>
     </header>
@@ -32,9 +32,14 @@
 
         <!-- Product Grid -->
         <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <!-- JavaScript দিয়ে প্রোডাক্টগুলো ডায়নামিকভাবে লোড হবে -->
+            <p class="text-center col-span-full text-gray-500 py-10">ওয়ার্ডপ্রেস ব্যাকএন্ড থেকে প্রোডাক্ট লোড হচ্ছে...</p>
         </div>
     </main>
+
+    <!-- Custom Notification Toast (Replaces alert) -->
+    <div id="toast-box" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-24 opacity-0 transition-all duration-300 z-50 max-w-sm">
+        <p id="toast-message" class="font-medium"></p>
+    </div>
 
     <!-- Checkout Modal -->
     <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50 p-4">
@@ -63,33 +68,66 @@
 
     <!-- Script -->
     <script>
-        // স্যাম্পল ১৫-২০টি প্রোডাক্টের ডাটা (পরে এটি ওয়ার্ডপ্রেস/উকমার্স API থেকে আসবে)
-        const products = [
-            { id: 1, name: "প্রিমিয়াম লেদার ওয়ালেট", price: 1200, image: "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=500&q=80" },
-            { id: 2, name: "স্মার্ট ওয়াচ সিরিজ ৮", price: 3500, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=500&q=80" },
-            { id: 3, name: "ওয়্যারলেস ব্লুটুথ ইয়ারবাড", price: 1800, image: "https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?auto=format&fit=crop&w=500&q=80" },
-            { id: 4, name: "স্টাইলিশ সানগ্লাস", price: 950, image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=500&q=80" },
-            { id: 5, name: "কটন ক্যাজুয়াল শার্ট", price: 1100, image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=500&q=80" },
-            { id: 6, name: "ক্লাসিক স্পোর্টস শু", price: 2200, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80" },
-            { id: 7, name: "মডার্ন ব্যাকপ্যাক ব্যাগ", price: 1600, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=500&q=80" },
-            { id: 8, name: "ম্যাগনেটিক কার ফোন হোল্ডার", price: 650, image: "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=500&q=80" },
-            { id: 9, name: "পোর্টেবল মিনি ব্লেন্ডার", price: 1500, image: "https://images.unsplash.com/photo-1570222094114-d074f7e1e6e9?auto=format&fit=crop&w=500&q=80" },
-            { id: 10, name: "এলইডি ডেট অ্যান্ড টাইম ডেস্ক ক্লক", price: 850, image: "https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=500&q=80" },
-            { id: 11, name: "স্টেইনলেস স্টিল ওয়াটার বোটল", price: 750, image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=500&q=80" },
-            { id: 12, name: "মিনি ইউএসবি ফ্যান", price: 550, image: "https://images.unsplash.com/photo-1585776245991-cf89dd7fc73a?auto=format&fit=crop&w=500&q=80" },
-            { id: 13, name: "ইউনিক আর্ম রিস্ট রোলার", price: 900, image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=500&q=80" },
-            { id: 14, name: "প্রিমিয়াম পারফিউম স্প্রে", price: 1400, image: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=500&q=80" },
-            { id: 15, name: "কিচেন ডিজিটাল ফুড স্কেল", price: 700, image: "https://images.unsplash.com/photo-1589782182703-2aaa69037b5b?auto=format&fit=crop&w=500&q=80" }
+        // ফলব্যাক স্যাম্পল প্রোডাক্ট (যদি ফ্রি সার্ভার API ব্লক করে)
+        const fallbackProducts = [
+            { id: 101, name: "প্রিমিয়াম লেদার ওয়ালেট (Demo)", price: 1200, image: "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=500&q=80" },
+            { id: 102, name: "স্মার্ট ওয়াচ সিরিজ ৮ (Demo)", price: 3500, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=500&q=80" }
         ];
 
+        let liveProducts = [];
         let selectedProduct = null;
 
-        // রেন্ডার প্রোডাক্টস
-        function renderProducts() {
+        // ওয়ার্ডপ্রেস ব্যাকএন্ড থেকে রিয়েল প্রোডাক্ট লোড করার ফাংশন
+        async function fetchProducts() {
             const grid = document.getElementById('product-grid');
-            grid.innerHTML = products.map(p => `
+            const apiUrl = 'https://myportshow.xo.je/wp-json/wc/store/v1/products';
+            
+            try {
+                // সরাসরি এপিআই কল করার চেষ্টা
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error('সার্ভার রেসপন্স সঠিক নয়');
+                }
+                const data = await response.json();
+                
+                liveProducts = data.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.prices && item.prices.price ? (parseFloat(item.prices.price) / 100) : 0,
+                    image: item.images && item.images.length > 0 ? item.images[0].src : 'https://placehold.co/500x500/e2e8f0/475569?text=No+Image'
+                }));
+
+                renderProducts(liveProducts);
+            } catch (error) {
+                console.warn('সরাসরি এপিআই ব্লক হয়েছে (InfinityFree Security/CORS)। ফলব্যাক ডেটা দেখানো হচ্ছে:', error.message);
+                
+                // ইনফিনিটি ফ্রি বট প্রোটেকশন বা CORS এররের কারণে ব্লক হলে সুন্দর একটি নোটিশসহ ডেমো প্রোডাক্ট দেখাবে
+                liveProducts = fallbackProducts;
+                renderProducts(liveProducts, true);
+            }
+        }
+
+        // রেন্ডার প্রোডাক্টস
+        function renderProducts(productsList, isFallback = false) {
+            const grid = document.getElementById('product-grid');
+            
+            let noticeHtml = '';
+            if (isFallback) {
+                noticeHtml = `
+                    <div class="col-span-full bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm mb-2 flex flex-col sm:flex-row justify-between items-center gap-2">
+                        <span>⚠️ <strong>নোট:</strong> InfinityFree ফ্রি সার্ভার সিকিউরিটি/CORS-এর কারণে লাইভ API ব্লক করেছে। নিচে ডেমো প্রোডাক্ট দেখানো হচ্ছে।</span>
+                    </div>
+                `;
+            }
+
+            if (productsList.length === 0) {
+                grid.innerHTML = noticeHtml + '<p class="text-center col-span-full text-gray-500">কোনো প্রোডাক্ট পাওয়া যায়নি। ওয়ার্ডপ্রেসে প্রোডাক্ট পাবলিশ করুন।</p>';
+                return;
+            }
+
+            grid.innerHTML = noticeHtml + productsList.map(p => `
                 <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col">
-                    <img src="${p.image}" alt="${p.name}" class="w-full h-48 object-cover">
+                    <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/500x500/e2e8f0/475569?text=Product'" class="w-full h-48 object-cover">
                     <div class="p-4 flex flex-col flex-grow">
                         <h3 class="font-semibold text-lg mb-1">${p.name}</h3>
                         <p class="text-indigo-600 font-bold text-lg mb-4">৳ ${p.price}</p>
@@ -97,11 +135,11 @@
                     </div>
                 </div>
             `).join('');
-            document.getElementById('cart-count').innerText = products.length;
+            document.getElementById('cart-count').innerText = productsList.length;
         }
 
         function openModal(id) {
-            selectedProduct = products.find(p => p.id === id);
+            selectedProduct = liveProducts.find(p => p.id === id);
             document.getElementById('modal-product-name').innerText = `নির্বাচিত প্রোডাক্ট: ${selectedProduct.name} (মূল্য: ৳ ${selectedProduct.price})`;
             document.getElementById('checkout-modal').classList.remove('hidden');
             document.getElementById('checkout-modal').classList.add('flex');
@@ -112,21 +150,27 @@
             document.getElementById('checkout-modal').classList.add('hidden');
         }
 
+        function showToast(msg) {
+            const toast = document.getElementById('toast-box');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 4000);
+        }
+
         function submitOrder(e) {
             e.preventDefault();
             const name = document.getElementById('cust-name').value;
-            const phone = document.getElementById('cust-phone').value;
-            const address = document.getElementById('cust-address').value;
-
-            // ভবিষ্যতে এখানে WooCommerce REST API-এর মাধ্যমে ব্যাকএন্ডে ডেটা পাঠানো হবে
-            alert(`ধন্যবাদ ${name}! আপনার অর্ডারটি সফলভাবে গৃহিত হয়েছে। প্রোডাক্ট: ${selectedProduct.name}`);
+            
+            showToast(`ধন্যবাদ ${name}! আপনার অর্ডারটি সফলভাবে গৃহিত হয়েছে।`);
             
             document.getElementById('order-form').reset();
             closeModal();
         }
 
-        // পেজ লোড হলে প্রোডাক্ট দেখাবে
-        window.onload = renderProducts;
+        // পেজ লোড হলেই এপিআই থেকে প্রোডাক্ট কল করবে
+        window.onload = fetchProducts;
     </script>
 </body>
 </html>
