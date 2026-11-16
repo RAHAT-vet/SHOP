@@ -75,20 +75,20 @@
         ];
 
         let liveProducts = [];
-        let selectedProduct = null;
-
-        // ওয়ার্ডপ্রেস ব্যাকএন্ড থেকে রিয়েল প্রোডাক্ট লোড করার ফাংশন
+        // ওয়ার্ডপ্রেস ব্যাকএন্ড থেকে রিয়েল প্রোডাক্ট লোড করার ফাংশন (Vercel Proxy ব্যবহার করে)
         async function fetchProducts() {
             const grid = document.getElementById('product-grid');
-            const apiUrl = 'https://myportshow.xo.je/wp-json/wc/store/v1/products';
+            // সরাসরি InfinityFree-তে হিট না করে Vercel-এর নিজস্ব প্রক্সি ব্যবহার করা হচ্ছে
+            const apiUrl = '/api/products';
             
             try {
-                // সরাসরি এপিআই কল করার চেষ্টা
                 const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error('সার্ভার রেসপন্স সঠিক নয়');
-                }
                 const data = await response.json();
+
+                // যদি প্রক্সি জানায় যে InfinityFree বট প্রোটেকশন ব্লক করেছে
+                if (!response.ok || data.blocked) {
+                    throw new Error(data.message || 'সার্ভার রেসপন্স সঠিক নয়');
+                }
                 
                 liveProducts = data.map(item => ({
                     id: item.id,
@@ -99,9 +99,9 @@
 
                 renderProducts(liveProducts);
             } catch (error) {
-                console.warn('সরাসরি এপিআই ব্লক হয়েছে (InfinityFree Security/CORS)। ফলব্যাক ডেটা দেখানো হচ্ছে:', error.message);
+                console.warn('প্রক্সি দিয়েও ব্লক হয়েছে (InfinityFree Security):', error.message);
                 
-                // ইনফিনিটি ফ্রি বট প্রোটেকশন বা CORS এররের কারণে ব্লক হলে সুন্দর একটি নোটিশসহ ডেমো প্রোডাক্ট দেখাবে
+                // ব্লক হলে ফলব্যাক ডেমো প্রোডাক্ট দেখাবে
                 liveProducts = fallbackProducts;
                 renderProducts(liveProducts, true);
             }
