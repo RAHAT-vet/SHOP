@@ -61,112 +61,62 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">সম্পূর্ণ ঠিকানা</label>
                     <textarea id="cust-address" rows="3" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">অর্ডার প্লেস করুন</button>
+                <button type="submit" id="submit-btn" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">অর্ডার প্লেস করুন</button>
             </form>
         </div>
     </div>
 
     <!-- Script -->
     <script>
-        // ফলব্যাক স্যাম্পল প্রোডাক্ট (যদি ফ্রি সার্ভার API ব্লক করে)
-        const fallbackProducts = [
-            { id: 101, name: "প্রিমিয়াম লেদার ওয়ালেট (Demo)", price: 1200, image: "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=500&q=80" },
-            { id: 102, name: "স্মার্ট ওয়াচ সিরিজ ৮ (Demo)", price: 3500, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=500&q=80" }
-        ];
-
-        let liveProducts = [];
-        // ওয়ার্ডপ্রেস ব্যাকএন্ড থেকে রিয়েল প্রোডাক্ট লোড করার ফাংশন (Vercel Proxy ব্যবহার করে)
-        async function fetchProducts() {
-            const grid = document.getElementById('product-grid');
-            // সরাসরি InfinityFree-তে হিট না করে Vercel-এর নিজস্ব প্রক্সি ব্যবহার করা হচ্ছে
-            const apiUrl = '/api/products';
-            
-            try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-
-                // যদি প্রক্সি জানায় যে InfinityFree বট প্রোটেকশন ব্লক করেছে
-                if (!response.ok || data.blocked) {
-                    throw new Error(data.message || 'সার্ভার রেসপন্স সঠিক নয়');
-                }
-                
-                liveProducts = data.map(item => ({
-                    id: item.id,
-                    name: item.name,
-                    price: item.prices && item.prices.price ? (parseFloat(item.prices.price) / 100) : 0,
-                    image: item.images && item.images.length > 0 ? item.images[0].src : 'https://placehold.co/500x500/e2e8f0/475569?text=No+Image'
-                }));
-
-                renderProducts(liveProducts);
-            } catch (error) {
-                console.warn('প্রক্সি দিয়েও ব্লক হয়েছে (InfinityFree Security):', error.message);
-                
-                // ব্লক হলে ফলব্যাক ডেমো প্রোডাক্ট দেখাবে
-                liveProducts = fallbackProducts;
-                renderProducts(liveProducts, true);
-            }
-        }
-
-        // রেন্ডার প্রোডাক্টস
-        function renderProducts(productsList, isFallback = false) {
-            const grid = document.getElementById('product-grid');
-            
-            let noticeHtml = '';
-            if (isFallback) {
-                noticeHtml = `
-                    <div class="col-span-full bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm mb-2 flex flex-col sm:flex-row justify-between items-center gap-2">
-                        <span>⚠️ <strong>নোট:</strong> InfinityFree ফ্রি সার্ভার সিকিউরিটি/CORS-এর কারণে লাইভ API ব্লক করেছে। নিচে ডেমো প্রোডাক্ট দেখানো হচ্ছে।</span>
-                    </div>
-                `;
-            }
-
-            if (productsList.length === 0) {
-                grid.innerHTML = noticeHtml + '<p class="text-center col-span-full text-gray-500">কোনো প্রোডাক্ট পাওয়া যায়নি। ওয়ার্ডপ্রেসে প্রোডাক্ট পাবলিশ করুন।</p>';
-                return;
-            }
-
-            grid.innerHTML = noticeHtml + productsList.map(p => `
-                <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col">
-                    <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/500x500/e2e8f0/475569?text=Product'" class="w-full h-48 object-cover">
-                    <div class="p-4 flex flex-col flex-grow">
-                        <h3 class="font-semibold text-lg mb-1">${p.name}</h3>
-                        <p class="text-indigo-600 font-bold text-lg mb-4">৳ ${p.price}</p>
-                        <button onclick="openModal(${p.id})" class="mt-auto w-full bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white py-2 rounded-lg font-medium transition">অর্ডার করুন</button>
-                    </div>
-                </div>
-            `).join('');
-            document.getElementById('cart-count').innerText = productsList.length;
-        }
-
-        function openModal(id) {
-            selectedProduct = liveProducts.find(p => p.id === id);
-            document.getElementById('modal-product-name').innerText = `নির্বাচিত প্রোডাক্ট: ${selectedProduct.name} (মূল্য: ৳ ${selectedProduct.price})`;
-            document.getElementById('checkout-modal').classList.remove('hidden');
-            document.getElementById('checkout-modal').classList.add('flex');
-        }
-
-        function closeModal() {
-            document.getElementById('checkout-modal').classList.remove('flex');
-            document.getElementById('checkout-modal').classList.add('hidden');
-        }
-
-        function showToast(msg) {
+// ... existing code ... -->
+        function showToast(msg, isError = false) {
             const toast = document.getElementById('toast-box');
+            toast.className = `fixed bottom-5 right-5 ${isError ? 'bg-red-600' : 'bg-green-600'} text-white px-6 py-4 rounded-xl shadow-lg transform transition-all duration-300 z-50 max-w-sm`;
             document.getElementById('toast-message').innerText = msg;
             toast.classList.remove('translate-y-24', 'opacity-0');
             setTimeout(() => {
                 toast.classList.add('translate-y-24', 'opacity-0');
-            }, 4000);
+            }, 5000);
         }
 
-        function submitOrder(e) {
+        async function submitOrder(e) {
             e.preventDefault();
+            const btn = document.getElementById('submit-btn');
             const name = document.getElementById('cust-name').value;
-            
-            showToast(`ধন্যবাদ ${name}! আপনার অর্ডারটি সফলভাবে গৃহিত হয়েছে।`);
-            
-            document.getElementById('order-form').reset();
-            closeModal();
+            const phone = document.getElementById('cust-phone').value;
+            const address = document.getElementById('cust-address').value;
+
+            // বাটন লোডিং স্টেট
+            btn.disabled = true;
+            btn.innerText = 'অর্ডার পাঠানো হচ্ছে...';
+
+            try {
+                const response = await fetch('/api/order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        phone: phone,
+                        address: address,
+                        productId: selectedProduct.id
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showToast(`ধন্যবাদ ${name}! আপনার অর্ডার (#${result.orderId}) সফলভাবে গৃহিত হয়েছে।`);
+                    document.getElementById('order-form').reset();
+                    closeModal();
+                } else {
+                    throw new Error(result.message || 'অর্ডার সাবমিট ব্যর্থ হয়েছে');
+                }
+            } catch (error) {
+                showToast(`দুঃখিত! ${error.message}`, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'অর্ডার প্লেস করুন';
+            }
         }
 
         // পেজ লোড হলেই এপিআই থেকে প্রোডাক্ট কল করবে
